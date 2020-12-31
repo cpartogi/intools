@@ -1,0 +1,35 @@
+FROM php:7.2-fpm
+
+RUN apt-get update
+
+RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
+RUN apt-get install -y  --no-install-recommends git zip unzip apt-utils libwebp-dev libjpeg62-turbo-dev libpng-dev libxpm-dev \
+    libfreetype6-dev 
+
+RUN docker-php-ext-configure gd --with-gd --with-webp-dir --with-jpeg-dir \
+    --with-png-dir --with-zlib-dir --with-xpm-dir \
+    --enable-gd-native-ttf
+
+RUN docker-php-ext-install zip
+
+RUN docker-php-ext-install gd
+
+RUN apt-get -yqq install exiftool
+RUN docker-php-ext-configure exif
+
+RUN docker-php-ext-install exif
+RUN docker-php-ext-install pdo_mysql
+RUN docker-php-ext-install bcmath
+
+RUN docker-php-ext-enable exif
+RUN docker-php-ext-enable pdo_mysql
+RUN docker-php-ext-enable bcmath
+
+RUN curl -o /tmp/composer-setup.php https://getcomposer.org/installer \
+    && curl -o /tmp/composer-setup.sig https://composer.github.io/installer.sig \
+    # Make sure we're installing what we think we're installing!
+    && php -r "if (hash('SHA384', file_get_contents('/tmp/composer-setup.php')) !== trim(file_get_contents('/tmp/composer-setup.sig'))) { unlink('/tmp/composer-setup.php'); echo 'Invalid installer' . PHP_EOL; exit(1); }" \
+    && php /tmp/composer-setup.php --no-ansi --install-dir=/usr/local/bin --filename=composer --snapshot \
+    && rm -f /tmp/composer-setup.*
+
+RUN composer global require hirak/prestissimo

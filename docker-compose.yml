@@ -1,0 +1,5 @@
+version: "3.7"
+services:
+
+  oaut2proxy:
+    image: quay.io/pusher/oauth2_proxy

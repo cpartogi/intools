@@ -1,0 +1,53 @@
+version: "3.3"
+
+services:
+    php72:
+        build:
+            context: ./data/config
+            dockerfile: php72-fpm-extensions
+        restart: always
+        networks:
+          vpcbr:
+            ipv4_address: 10.10.123.4
+        volumes:
+            - /Users/user/Workplace:/var/www
+            - ./config/hosts:/etc/hosts:rw
+        container_name: php72
+    mysql57:
+        container_name: mysql57
+        restart: always
+        image: mysql:5.7
+        environment:
+            MYSQL_ROOT_PASSWORD: 'fakepassword' # TODO: Change this
+            MYSQL_USER: 'demo'
+            MYSQL_PASS: 'demo'
+        volumes:
+            - ./mydata:/var/lib/mysql
+        ports:
+            - "3306:3306"
+        networks:
+          vpcbr:
+            ipv4_address: 10.10.123.10
+    nginx:
+        image: nginx:1.17.8-alpine
+        restart: always
+        ports:
+            - "80:80"
+            - "443:443"
+        networks:
+          vpcbr:
+            ipv4_address: 10.10.123.2
+        volumes:
+            - /Users/user/Workplace:/var/www
+            - ./intools-cilientname.conf:/etc/nginx/conf.d/intools-cilientname.conf
+            - ./config/hosts:/etc/hosts:rw
+        links:
+            - php72
+            - mysql57
+        container_name: nginx
+networks:
+  vpcbr:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.10.123.0/24
